@@ -15,7 +15,7 @@ namespace Wetter
     {
 
         private OpenWeatherMap map= new();
-        Coordinates localtion = new();
+        Coordinates LocationCoords = new();
         public WeatherInfo LocalWeather { get; set; }
         public DateTime LastUpdated { get; set; } = DateTime.Now;
 
@@ -23,7 +23,7 @@ namespace Wetter
         {
             InitializeComponent();
 
-             Init();
+            _ = Update();
         }
 
         private void ReflectToTree(TreeViewItem tree, (Type type, object? value) refl, string name)
@@ -35,7 +35,6 @@ namespace Wetter
             item.Header = name;
 
             if (refl.value is null) return;
-
 
             if (IReflectable.IsReflectable(refl.type))
                 Reflector<TreeViewItem>.Reflect((IReflectable)refl.value!, item, ReflectToTree);
@@ -53,7 +52,7 @@ namespace Wetter
 
 
 
-                var weather = await map.GetCurrentWeatherByCoords(localtion);
+                var weather = await map.GetCurrentWeatherByCoords(LocationCoords);
 
                 LocalWeather = weather!;
                 DataContext = LocalWeather;
@@ -76,31 +75,22 @@ namespace Wetter
             }
         }
 
-        protected async void Init()
-        {
-
-            LocationName.Text = "London";
-
-            await Update();
-
-        }
+        
 
 
         private async void CityInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-  
-
             if (e.Key == System.Windows.Input.Key.Enter)
             {
                 GeoLocation[]? locations;
                 try
                 {
                     locations = await map.GetLocationByQuery(LocationName.Text);
-                } catch ( Exception ex ) { MessageBox.Show(ex.Message); return; }
+                } catch ( Exception ex ) { MessageBox.Show(ex.Message);  return; }
 
                  var set = false;
 
-                if (locations?.Count() == 0)
+                if (locations?.Length == 0)
                 {
                     MessageBox.Show($"Location '{LocationName.Text}' not found.");
                     return;
@@ -113,8 +103,7 @@ namespace Wetter
 
                     if (result == MessageBoxResult.Yes)
                     {
-                        
-                        localtion = geoLocation.coords;
+                        LocationCoords = geoLocation.coords;
                         set = true;
                         break;
                     }
