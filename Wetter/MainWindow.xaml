@@ -9,7 +9,7 @@
         Height="280" Width="500"
         ResizeMode="CanMinimize"
         d:DataContext="{Binding LocalWeather, RelativeSource = {RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}}"
-        Title="{Binding name, StringFormat=Weather at {0}}">
+        Title="{Binding name, StringFormat=Weather at {0}}" WindowStartupLocation="CenterScreen">
 
     <Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -83,7 +83,7 @@
 
         <Image HorizontalAlignment="Left" Height="50"
                Margin="0,25,0,0" VerticalAlignment="Top"
-               Width="62" Name="Icon"
+               Width="62"
                RenderTransformOrigin="0.5,0.5"
                Source="{Binding Icon}">
         </Image>
@@ -92,12 +92,13 @@
                 Padding="5" VerticalAlignment="Bottom"
                 Margin="10" Background="#3F000000"
                 Foreground="White" BorderBrush="White"
-                Click="Update_Click" Content="Update">
+                Click="Update_Click" Content="Update" Focusable="False">
         </Button>
 
         <TreeView Name="Tree" HorizontalAlignment="Left" 
                   Height="115" Margin="10,105,0,0" VerticalAlignment="Top"
                   Width="251" Background="{x:Null}" Focusable="False">
         </TreeView>
+
     </Grid>
 </Window>

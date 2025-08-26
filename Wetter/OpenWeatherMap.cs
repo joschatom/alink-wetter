@@ -99,7 +99,7 @@ namespace Wetter
 
         public DateTime Localize(DateTime date) => date.AddSeconds(timezone);
 
-        public BitmapImage Icon => new BitmapImage(new($"https://openweathermap.org/img/wn/{weather[0].icon}@4x.png"),
+        public BitmapImage Icon => new(new($"https://openweathermap.org/img/wn/{weather[0].icon}@4x.png"),
             new());
     }
 
@@ -128,13 +128,15 @@ namespace Wetter
         public class GeoLocation: IReflectable
         {
             public string? zip;
-            public string name;
+            public required string name;
+#pragma warning disable IDE0044, CS50649 // Add readonly modifier
             [JsonProperty("lat")] double _latRaw;
             [JsonProperty("lon")] double _lonRaw;
+#pragma warning restore IDE0044 // Add readonly modifier
             [Newtonsoft.Json.JsonIgnore]
-            public Coordinates coords { get => new Coordinates { lat = _latRaw, lon = _lonRaw }; }
+            public Coordinates coords { get => new() { lat = _latRaw, lon = _lonRaw }; }
 
-            public string country;
+            public required string country;
             public string? state;
         }
 

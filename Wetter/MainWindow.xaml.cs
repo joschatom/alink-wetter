@@ -16,7 +16,7 @@ namespace Wetter
 
         private OpenWeatherMap map= new();
         Coordinates LocationCoords = new();
-        public WeatherInfo LocalWeather { get; set; }
+        public WeatherInfo? LocalWeather { get; set; }
         public DateTime LastUpdated { get; set; } = DateTime.Now;
 
         public MainWindow()
@@ -108,7 +108,6 @@ namespace Wetter
                         break;
                     }
                 }
-
 
                 if (set) await Update();
                 else MessageBox.Show("No Location Selected", "Location Selection");
