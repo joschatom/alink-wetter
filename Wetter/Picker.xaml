@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="Wetter.Picker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Wetter"
+             mc:Ignorable="d" 
+             >
+    <Grid Height="20" Width="300" >
+        <Grid.Resources>
+            <Style TargetType="ListBox" >
+                <Setter Property="Foreground" Value="White"/>
+            </Style>
+            <Style TargetType="RibbonRadioButton" >
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="GroupName" Value="DaySel"/>
+            </Style>
+        </Grid.Resources>
+        <StackPanel Orientation="Horizontal" Name="Inner">
+            <RibbonControlGroup Name="DaySelection">
+                <RibbonControlGroup.Resources>
+                    <Style TargetType="RibbonRadioButton">
+                        <Setter Property="GroupName" Value="DaySel"/>
+                    </Style>
+                </RibbonControlGroup.Resources>
+                <RibbonRadioButton Label="0" IsChecked="{Binding [0]}" GroupName="DaySel"/>
+                <RibbonRadioButton Label="1" IsChecked="{Binding [1]}" GroupName="DaySel"/>
+                <RibbonRadioButton Label="2" IsChecked="{Binding [2]}" GroupName="DaySel"/>
+                <RibbonRadioButton Label="3" IsChecked="{Binding [3]}" GroupName="DaySel"/>
+                <RibbonRadioButton Label="4" IsChecked="{Binding [4]}" GroupName="DaySel"/>
+                <RibbonRadioButton Label="5" IsChecked="{Binding [5]}" GroupName="DaySel"/>
+            </RibbonControlGroup>
+            <DatePicker Width="25" BorderBrush="{x:Null}" Foreground="#FF2F2C2C" SelectedDateFormat="Long" Height="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0,0,0,0" IsDropDownOpen="True" Text="" BorderThickness="0,0,0,0" Opacity="0.985" >
+                <DatePicker.CalendarStyle>
+
+                    <Style TargetType="{x:Type Calendar}">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="#E50E0435"/>
+                        <Setter Property="CalendarDayButtonStyle">
+                            <Setter.Value>
+                                <Style TargetType="{x:Type CalendarDayButton}">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Style>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="CalendarButtonStyle">
+                            <Setter.Value>
+                                <Style TargetType="{x:Type CalendarButton}">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Style>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="CalendarItemStyle">
+                            <Setter.Value>
+                                <Style TargetType="{x:Type CalendarItem}">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Style>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DatePicker.CalendarStyle>
+            </DatePicker>
+            <RibbonComboBox Background="{x:Null}"
+                       Foreground="White" BorderThickness="0"
+                       Name="Selection"
+                       VerticalAlignment="Center" Height="20" FocusedBackground="{x:Null}" MouseOverBackground="{x:Null}" SelectionBoxWidth="105" 
+                       >
+                <RibbonGallery MaxColumnCount="1" SelectionChanged="RibbonGallery_SelectionChanged" >
+
+                    <RibbonGalleryCategory x:Name="Options" >
+                        <RibbonGalleryCategory.ItemContainerStyle>
+
+                            <Style TargetType="RibbonGalleryItem">
+                                <Setter Property="Foreground" Value="Black"></Setter>
+                                <Setter Property="Background" Value="Transparent"></Setter>
+                                <Setter Property="IsEnabled" Value="True"/>
+                            </Style>
+                        </RibbonGalleryCategory.ItemContainerStyle>
+                    </RibbonGalleryCategory>
+                </RibbonGallery>
+
+            </RibbonComboBox>
+
+        </StackPanel>
+
+    </Grid>
+</UserControl>

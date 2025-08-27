@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -45,7 +46,8 @@ namespace Wetter.Reflection
             {
                 if (field.GetCustomAttribute<ReflectIgnore>() is not null) continue;
 
-                cb(ctx, (field.FieldType, field.GetValue(obj)), field.Name);
+
+                cb(ctx, (field.FieldType, field.GetValue(obj)), field.Name); 
 
             }
 
@@ -53,9 +55,15 @@ namespace Wetter.Reflection
             {
                 if (prop.GetCustomAttribute<ReflectIgnore>() is not null) continue;
 
-                cb(ctx, (prop.PropertyType, prop.GetValue(obj)), prop.Name);
+              
+                cb(ctx, (prop.PropertyType, prop.GetValue(obj)), prop.Name); 
 
             }
         }
+    }
+
+    public class ReflectableList<T>: List<T>, IReflectable
+    {
+
     }
 }

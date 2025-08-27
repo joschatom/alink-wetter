@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:Wetter"
         xmlns:sys = "clr-namespce:System"
         mc:Ignorable="d"
-        Height="280" Width="500"
-        ResizeMode="CanMinimize"
-        d:DataContext="{Binding LocalWeather, RelativeSource = {RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}}"
-        Title="{Binding name, StringFormat=Weather at {0}}" WindowStartupLocation="CenterScreen">
+        Height="300" Width="500"
+
+        d:DataContext="{Binding DataSource, RelativeSource = {RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}}"
+        Title="{Binding City.name, StringFormat=Weather at {0}}" WindowStartupLocation="CenterScreen">
 
     <Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -47,34 +47,34 @@
                      Background="{x:Null}" VerticalContentAlignment="Center" SelectionBrush="White" SelectionTextBrush="Black" CaretBrush="#FFFF9337"/>
 
             <Label HorizontalAlignment="Right" HorizontalContentAlignment="Right" Height="29" VerticalAlignment="Top" Width="164" FontSize="16">
-                <Run Text="{Binding LastUpdated, Mode=OneTime, FallbackValue='Not Fetched'}" ToolTip="Date of weather info"/>
+                <Run Text="{Binding LastUpdated.TimeOfDay, Mode=OneTime, FallbackValue='Not Fetched'}" ToolTip="Date of weather info"/>
             </Label>
 
             <Label HorizontalContentAlignment="Right"  HorizontalAlignment="Right" Height="32" Width="164" Foreground="White" FontSize="16">
-                <Run Text="{Binding weather[0].description, Mode=OneWay, FallbackValue='No Data'}" d:Text="Weather Desc"/>
+                <Run Text="{Binding Description, Mode=OneWay, FallbackValue='No Data'}" d:Text="Weather Desc"/>
             </Label>
         </StackPanel>
 
         <TextBlock HorizontalAlignment="Left" Height="38" VerticalAlignment="Top" FontSize="25" Margin="46,30,0,0">
-            <Run Text="{Binding main.Temp, FallbackValue='0°C', StringFormat={}{0}°C}"/>
-            (<Run Text="{Binding main.feels_like, Mode=OneTime, FallbackValue='0°', StringFormat={}{0}°C}" ToolTip="Feels like"/>)
+            <Run Text="{Binding Main.Temp, FallbackValue='0°C', StringFormat={}{0}°C}"/>
+            (<Run Text="{Binding Main.feels_like, Mode=OneTime, FallbackValue='0°', StringFormat={}{0}°C}" ToolTip="Feels like"/>)
         </TextBlock>
 
         <TextBlock Margin="10,68,239,0">
-            Minimum Temperature : <Run Text="{Binding main.temp_min, FallbackValue='0°', StringFormat={}{0}°}" /><LineBreak/>
-            Maximum Temperature: <Run Text="{Binding main.temp_max, FallbackValue='0°', StringFormat={}{0}°}"/><LineBreak/>
+            Minimum Temperature : <Run Text="{Binding Main.temp_min, FallbackValue='0°', StringFormat={}{0}°}" /><LineBreak/>
+            Maximum Temperature: <Run Text="{Binding Main.temp_max, FallbackValue='0°', StringFormat={}{0}°}"/><LineBreak/>
         </TextBlock>
 
         <TextBlock  Margin="270,100,12,0" VerticalAlignment="Top"  Foreground="White">
             Sunset: <Run Text="{Binding LocalSunset, Mode=OneWay, FallbackValue='6PM'}"/><LineBreak/>
             Sunrise: <Run Text="{Binding LocalSunrise, Mode=OneWay, FallbackValue='6AM'}"/><LineBreak/>
-            Humidity: <Run Text="{Binding main.humidity, FallbackValue='100%', StringFormat={}{0}%}"/><LineBreak/>
-            Wind: <Run Text="{Binding wind.Speed, FallbackValue='0m/s', StringFormat={}{0}m/s}" ToolTip="Speed"/>,
-            <Run Text="{Binding wind.Deg, FallbackValue='0°', StringFormat={}{0}°}" ToolTip="Direction"/>,
-            <Run Text="{Binding wind.Gust, FallbackValue='0m/s', StringFormat={}{0}m/s}" ToolTip="Gust"/><LineBreak/>
-            Clouds: <Run Text="{Binding main.humidity, FallbackValue='100%', StringFormat={}{0}%}"/><LineBreak/>
-            See Level: <Run Text="{Binding main.sea_level, FallbackValue='0m', StringFormat={}{0}m}"/><LineBreak/>
-            Ground Level: <Run Text="{Binding main.grnd_level, FallbackValue='0m', StringFormat={}{0}m}"/><LineBreak/>
+            Humidity: <Run Text="{Binding Main.humidity, FallbackValue='100%', StringFormat={}{0}%}"/><LineBreak/>
+            Wind: <Run Text="{Binding Wind.Speed, FallbackValue='0m/s', StringFormat={}{0}m/s}" ToolTip="Speed"/>,
+            <Run Text="{Binding Wind.Deg, FallbackValue='0°', StringFormat={}{0}°}" ToolTip="Direction"/>,
+            <Run Text="{Binding Wind.Gust, FallbackValue='0m/s', StringFormat={}{0}m/s}" ToolTip="Gust"/><LineBreak/>
+            Clouds: <Run Text="{Binding Main.humidity, FallbackValue='100%', StringFormat={}{0}%}"/><LineBreak/>
+            See Level: <Run Text="{Binding Main.sea_level, FallbackValue='0m', StringFormat={}{0}m}"/><LineBreak/>
+            Ground Level: <Run Text="{Binding Main.grnd_level, FallbackValue='0m', StringFormat={}{0}m}"/><LineBreak/>
         </TextBlock>
 
         <Label HorizontalAlignment="Left" Height="25" Width="60" FontSize="12" VerticalAlignment="Top" BorderThickness="2,0,0,0">
@@ -100,5 +100,9 @@
                   Width="251" Background="{x:Null}" Focusable="False">
         </TreeView>
 
+        <local:Picker Height="30" HorizontalAlignment="Right"
+                Padding="5" VerticalAlignment="Bottom"
+                Margin="0,0,80,10" Background="#3F000000"
+                Foreground="White" x:Name="ViewPicker"></local:Picker>
     </Grid>
 </Window>
