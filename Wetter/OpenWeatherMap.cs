@@ -3,7 +3,11 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Dynamic;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -24,23 +28,23 @@ namespace Wetter
     }
 
 
-    public class City: IReflectable
+    public class City : IReflectable
     {
-        public int id { get; set; }
-        public required string name { get; set; }
-        public Coordinates coord { get; set; }
-        public required string country { get; set; }
-        public int? population { get; set; }
-        public int timezone { get; set; }
+        public int Id { get; set; }
+        public required string Name { get; set; }
+        public Coordinates Coord { get; set; }
+        public required string Country { get; set; }
+        public int? Population { get; set; }
+        public int Timezone { get; set; }
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.UnixDateTimeConverter))]
-        public DateTime sunrise { get; set; }
+        public DateTime Sunrise { get; set; }
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.UnixDateTimeConverter))]
-        public DateTime sunset { get; set; }
+        public DateTime Sunset { get; set; }
     }
 
 
 
-    public class ForecastSpanData: IReflectable
+    public class ForecastSpanData : IReflectable
     {
         public Main main { get; set; }
         public Rain rain { get; set; }
@@ -64,18 +68,20 @@ namespace Wetter
         public List<ForecastSpanData> Data { get; set; }
         public City city { get; set; }
 
-      
+
     }
 
-    public class WeatherForecast: DataSource
+    public class WeatherForecast : DataSource
     {
-        internal int Selector { get; set; }
+        internal DateTime Day { get; set; }
+        internal TimeOnly Timestamp { get; set; }
 
-        public override Main Main => info.Data[Selector].main;
 
-        public override DateTime LastUpdated => Localize(info.Data[Selector].dt);
+        public override Main Main => this[Day, Timestamp].main;
 
-        public override Wind Wind => info.Data[Selector].wind;
+        public override DateTime LastUpdated => Localize(this[Day, Timestamp].dt);
+
+        public override Wind Wind => this[Day, Timestamp].wind;
 
         public override BitmapImage? Icon => new(new($"https://openweathermap.org/img/wn/{info.Data[0].weather[0].icon}@4x.png"),
             new());
@@ -85,24 +91,71 @@ namespace Wetter
 
         public override City City => info.city;
 
-        ForecastInfo info;
-        Dictionary<int, List<ForecastSpanData>> maped;
-
-        public WeatherForecast(int selector, ForecastInfo info)
+        public override Dictionary<DateTime, (string? desc, TimeOnly ts)[]> Timestamps
         {
-            Dictionary<int, List<ForecastSpanData>> forecast = [];
+            get
+            {
+                Dictionary<DateTime, (string? desc, TimeOnly ts)[]> lst = [];
+
+                foreach (var kv in maped) {
+                    (string? desc, TimeOnly ts)[] opts =
+                        kv.Value.Keys.Select((o, _) => ((string?)null, o)).ToArray();
+
+                    lst.Add(kv.Key, opts);
+                
+                }
+
+                return lst;
+            }
+        }
+
+        ForecastInfo info;
+        Dictionary<DateTime, Dictionary<TimeOnly, ForecastSpanData>> maped;
+
+        public ForecastSpanData this[DateTime day, TimeOnly timestamp]
+            => maped[day][timestamp];
+
+        public WeatherForecast(ForecastInfo info)
+        {
+            Dictionary<DateTime, Dictionary<TimeOnly, ForecastSpanData>> forecast = [];
+
+            this.info = info;
+            this.maped = forecast;
 
             foreach (var data in info.Data)
             {
-                List<ForecastSpanData>? spans;
-                if (forecast.TryGetValue(data.dt.DayOfYear - DateTime.Now.DayOfYear, out spans))
-                    spans.Add(data);
+                if (forecast.TryGetValue(data.dt.Date, out Dictionary<TimeOnly, ForecastSpanData>? spans))
+                    spans.Add(TimeOnly.FromDateTime(Localize(data.dt)), data);
+                else forecast.Add(data.dt.Date, new([new(TimeOnly.FromDateTime(Localize(data.dt)), data)]));
             }
 
-            Selector = selector;
-            this.info = info;
-            this.maped = forecast;
+            Day = DateTime.Now.Date;
+            Timestamp = TimeOnly.MinValue;
+
+
         }
+
+
+    }
+
+    public class Indexed<I, T>
+    {
+
+        private Func<I, T> getFn { get; init; } = (_) => throw new NotImplementedException();
+        private Action<I, T> setFn { get; init; } = (_, _) => throw new NotImplementedException();
+
+        public Indexed(
+            Func<I, T>? get = null,
+            Action<I, T>? set = null
+        )
+        {
+
+            this.getFn = get ?? getFn;
+            this.setFn = set ?? setFn;
+
+        }
+
+        public T this[I idx] { get => getFn(idx); set => setFn(idx, value); }
     }
 
     public struct Weather : IReflectable
@@ -194,18 +247,22 @@ namespace Wetter
 
         public override City City => new()
         {
-            coord = coord,
-            country = sys.country!,
-            id = id,
-            name = name,
-            timezone = timezone,
-            sunrise = sys.sunrise,
-            sunset = sys.sunset,
+            Coord = coord,
+            Country = sys.country!,
+            Id = id,
+            Name = name,
+            Timezone = timezone,
+            Sunrise = sys.sunrise,
+            Sunset = sys.sunset,
         };
+
+        public override Dictionary<DateTime, (string? desc, TimeOnly ts)[]> Timestamps
+            => new([new(dt.Date, [("Live", TimeOnly.FromDateTime(Localize(dt)))])]);
     }
 
-    public abstract class DataSource: IReflectable
+    public abstract class DataSource : IReflectable
     {
+
 
         public abstract Main Main { get; }
         public abstract DateTime LastUpdated { get; }
@@ -214,17 +271,18 @@ namespace Wetter
         public abstract string Description { get; }
         public abstract City City { get; }
 
+        public abstract Dictionary<DateTime, (string? desc, TimeOnly ts)[]> Timestamps { get; }
 
         public TimeOnly StartTime { get => TimeOnly.FromDateTime(LastUpdated); }
         public TimeOnly EndTime { get => TimeOnly.FromDateTime(LastUpdated); }
 
 
-        public TimeOnly LocalSunrise => TimeOnly.FromDateTime(Localize(City.sunrise));
-        public TimeOnly LocalSunset => TimeOnly.FromDateTime(Localize(City.sunset));
+        public TimeOnly LocalSunrise => TimeOnly.FromDateTime(Localize(City.Sunrise));
+        public TimeOnly LocalSunset => TimeOnly.FromDateTime(Localize(City.Sunset));
 
-        public TimeSpan TimezoneOffset => TimeSpan.FromSeconds(City.timezone);
+        public TimeSpan TimezoneOffset => TimeSpan.FromSeconds(City.Timezone);
 
-        public string UTCTimezone => City.timezone
+        public string UTCTimezone => City.Timezone
              < 0 ? $"UTC-{Math.Abs(TimezoneOffset.Hours)}"
              : $"UTC+{TimezoneOffset.Hours}";
 
@@ -255,11 +313,11 @@ namespace Wetter
 
         private const string APP_ID = "cb3c0e2b0a686064660539730a67c741";
         private HttpClient Client = new();
-      
+
 
         public OpenWeatherMap()
         {
-            
+
         }
 
         internal async Task<T?> GetAsJson<T>(string url)

@@ -1,12 +1,18 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json;
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shell;
 using Wetter.Reflection;
 using static Wetter.OpenWeatherMap;
 
@@ -48,12 +54,21 @@ namespace Wetter
         {
             get
             {
-                if (ViewPicker.Day == 0)
-                    return localWeather is null ? null : localWeather;
-                else if (forecastInfo is null)
+                if (forecastInfo is null)
                     return null;
-                else {
-                    forecastInfo.Selector = DataIdx;
+                else if (ViewPick.Options.SelectedValue is null)
+                    return null;
+                else if (
+                    ViewPick.SelectedDate.DayOfYear == DateTime.Now.DayOfYear
+                    && ((ListViewItem)ViewPick.Options.SelectedValue).Content.ToString() == "Live"
+                    )
+                    return localWeather is null ? null : localWeather;
+           
+                else
+                {
+                    forecastInfo.Day = ViewPick.SelectedDate;
+                    forecastInfo.Timestamp = (TimeOnly)((ListViewItem)ViewPick.Options.SelectedValue).Tag;
+
                     return forecastInfo!;
                 }
             }
@@ -67,25 +82,50 @@ namespace Wetter
         {
             InitializeComponent();
 
-            ViewPicker.ChangeView += ViewPicker_ChangeView;
+            TaskbarItemInfo = new();
 
-            _ = Update();
+            _ = Init();
         }
 
-        private void ViewPicker_ChangeView(int day)
+        public async Task Init()
         {
-            MessageBox.Show("CHANGE VIEW");
+            await Fetch();
+            await Update();
+            InvalidateData();
         }
 
-        private int DataIdx => ((ViewPicker.Day - 1) * 8) + ViewPicker.Timespan;
+        private void ViewPick_ChangeView(DateTime arg1, int arg2)
+        {
+            InvalidateData();
+        }
 
-        private async void Fetch()
+        public void InvalidateData()
+        {
+
+            InvalidateProperty(DataContextProperty);
+            DataContext = DataSource;
+            LocationName.Text = DataSource?.City.Name;
+        }
+
+
+        private async Task Fetch()
         {
             try
             {
                 localWeather = await map.GetCurrentWeatherByCoords(LocationCoords);
-                forecastInfo = new WeatherForecast(DataIdx, (await map.GetForecastByCoords(LocationCoords)).Value);
-            }catch (Exception e)
+                forecastInfo = new WeatherForecast((await map.GetForecastByCoords(LocationCoords)).Value);
+
+                ViewPick.Timestamps = localWeather!.Timestamps;
+
+                foreach (var ts in forecastInfo.Timestamps)
+                {
+                    if (!ViewPick.Timestamps.ContainsKey(ts.Key))
+                        ViewPick.Timestamps.Add(ts.Key, ts.Value);
+                    else ViewPick.Timestamps[ts.Key] = 
+                            ViewPick.Timestamps[ts.Key].Concat(ts.Value).ToArray();
+                }
+            }
+            catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
@@ -96,10 +136,7 @@ namespace Wetter
         {
             var item = new TreeViewItem() { Foreground = Brushes.White };
 
-            Console.WriteLine($"{refl.type} {refl.value}, {name}");
-
             item.Header = name;
-
 
             if (refl.value is null) return;
             var value = new TreeViewItem() { Header = refl!.value.ToString(), Foreground = Brushes.White };
@@ -118,30 +155,18 @@ namespace Wetter
             {
                 LastUpdated = DateTime.Now;
                 LastUpdatedDisplay.Text = LastUpdated.ToString();
+                if (DataSource is not null) ViewPick.Timestamps = DataSource!.Timestamps;
 
-                Fetch();
+                await Fetch();
 
                 DataContext = DataSource;
 
-
-                var tree = new TreeViewItem() { Header = "weather", Foreground = Brushes.White, IsSelected = false };
-
-                
-                if(DataSource is not null) Reflector<TreeViewItem>.Reflect(DataSource!, tree, ReflectToTree);
-
-                List<TreeViewItem> items = [tree];
-
-                Tree.ItemsSource = items;
-
-                if (Tree.SelectedItem is not null) ((TreeViewItem)Tree.SelectedItem).IsSelected = false;
-
-                LocationName.Text = DataSource?.City.name;
+                LocationName.Text = DataSource?.City.Name;
             } catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
         }
-
 
 
 
@@ -188,9 +213,32 @@ namespace Wetter
 
         private async void Update_Click(object sender, RoutedEventArgs e)
         {
+            TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
+
+            await Fetch();
+            await Update();
+
+            TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
+
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
 
 
-             await Update();
+            if (e.Property == DataContextProperty)
+            {
+                TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
+            }
+                base.OnPropertyChanged(e);
+            if (e.Property == DataContextProperty)
+            {
+                TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
+            }
+
+                if (e.Property.Name != "SelectedDate") return;
+            MessageBox.Show(e.ToString());
         }
     }
+
 }
