@@ -311,7 +311,7 @@ namespace Wetter
     public class OpenWeatherMap
     {
 
-        private const string APP_ID = "cb3c0e2b0a686064660539730a67c741";
+        private const string APP_ID = "<insert token here>";
         private HttpClient Client = new();
 
 
